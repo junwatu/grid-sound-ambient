@@ -19,7 +19,8 @@ Icon?
 
 # Environment files
 .env
-.env.*
+.env.local
+.env.*.local
 
 # Logs
 logs/
