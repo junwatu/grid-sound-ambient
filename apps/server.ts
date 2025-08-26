@@ -9,8 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const WEB_URL = process.env.WEB_URL || `http://localhost:${PORT}`;
+const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
+const PORT = process.env.PORT || (WEB_URL ? new URL(WEB_URL).port || 3000 : 3000);
 
 // Middleware
 app.use(cors());
