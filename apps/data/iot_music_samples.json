@@ -1,0 +1,58 @@
+[
+  {
+    "timestamp": "2025-08-20T09:15:00",
+    "zone": "Meeting Room A",
+    "temperature_c": 22.8,
+    "humidity_pct": 47,
+    "co2_ppm": 1020,
+    "voc_index": 185,
+    "occupancy": 7,
+    "noise_dba": 49,
+    "productivity_score": 65,
+    "trend_10min.co2_ppm_delta": 120,
+    "trend_10min.noise_dba_delta": 1,
+    "trend_10min.productivity_delta": -5
+  },
+  {
+    "timestamp": "2025-08-20T12:05:00",
+    "zone": "Cafeteria",
+    "temperature_c": 25.9,
+    "humidity_pct": 56,
+    "co2_ppm": 880,
+    "voc_index": 150,
+    "occupancy": 38,
+    "noise_dba": 66,
+    "productivity_score": 58,
+    "trend_10min.co2_ppm_delta": 90,
+    "trend_10min.noise_dba_delta": 6,
+    "trend_10min.productivity_delta": -8
+  },
+  {
+    "timestamp": "2025-08-20T16:42:00",
+    "zone": "Open Office",
+    "temperature_c": 23.7,
+    "humidity_pct": 50,
+    "co2_ppm": 720,
+    "voc_index": 118,
+    "occupancy": 22,
+    "noise_dba": 52,
+    "productivity_score": 74,
+    "trend_10min.co2_ppm_delta": -30,
+    "trend_10min.noise_dba_delta": -2,
+    "trend_10min.productivity_delta": 4
+  },
+  {
+    "timestamp": "2025-08-20T18:10:00",
+    "zone": "Lobby",
+    "temperature_c": 24.8,
+    "humidity_pct": 53,
+    "co2_ppm": 650,
+    "voc_index": 105,
+    "occupancy": 12,
+    "noise_dba": 58,
+    "productivity_score": 0,
+    "trend_10min.co2_ppm_delta": 10,
+    "trend_10min.noise_dba_delta": 3,
+    "trend_10min.productivity_delta": 0
+  }
+]
