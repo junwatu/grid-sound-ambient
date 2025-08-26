@@ -132,9 +132,13 @@ Copy file `.env.example` to `.env` and fill in the values:
 # ElevenLabs API Key for ElevenLabs Music
 ELEVENLABS_API_KEY=
 
+OPENAO_API_KEY=
+
 GRIDDB_WEBAPI_URL=
 GRIDDB_PASSWORD=
 GRIDDB_USERNAME=
+
+WEB_URL=http://localhost:3000
 ```
 
 Please look the section on [Prerequisites](#prerequisites) before running the project.
@@ -144,10 +148,12 @@ Please look the section on [Prerequisites](#prerequisites) before running the pr
 Run the project using the following command:
 
 ```sh
-npm run dev
+npm run start
 ```
 
 ### 5. Open the application
 
-Open the application in your browser at [http://localhost:3000](http://localhost:3000). You also need to allow the browser to access your microphone.
+Open the application in your browser at [http://localhost:3000](http://localhost:3000) or any address that `WEB_URL` set to. You also need to allow the browser to access your microphone.
 
+
+## Implementation Details
