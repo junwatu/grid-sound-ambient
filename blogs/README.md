@@ -4,9 +4,40 @@
 
 This tutorial shows how to generate evolving ambient music driven by IoT sensor data. We’ll ingest sensor readings into **GridDB** database, map those readings to musical parameters using OpenAI, and call **ElevenLabs Music** to render an audio track. The UI is built with **React + Vite**, and the backend is **Node.js**.
 
-# Introduction
+## Introduction
 
 Ambient music thrives on context. Here, the environment literally composes the score. Heat can slow the tempo, humidity can soften the timbre, and human presence can thicken the arrangement. We’ll stitch together a small system: devices post telemetry (we will use the data directly), GridDB keeps the data, the AI model create music parameters, and ElevenLabs will renders audio that you can play instantly in the browser.
+
+## System Architecture
+
+![sys arch](images/griddb-elevenlabs-ambient-music.png)
+
+
+The system has several core components working together to turn IoT data into ambient sound:
+
+**IoT Data Source**
+
+Environmental sensors capture values such as temperature, humidity, sound levels, and occupancy. These readings are the raw input for the music generation process.
+
+**Node.js Backend**
+
+Node.js acts as the central orchestrator. It receives IoT sensor readings and coordinates interactions between the AI models, the music generator, and the database.
+
+**OpenAI Model**
+
+The IoT data is processed by an OpenAI model. The model transforms the data into a musical prompt. For example, “calm ambient soundscape with airy textures and slow tempo.” This ensures the music reflects the current environment in a more human-like, descriptive way.
+
+**ElevenLabs Music API**
+
+The generated music prompt is sent to the ElevenLabs Music API. ElevenLabs then produces an audio track that matches the description. The result is ambient audio that adapts to real-world conditions.
+
+**GridDB Database**
+
+Both the music prompt and the audio metadata (such as file path or data URL) are stored in GridDB. GridDB also keeps the original IoT readings.
+
+**React + Vite Frontend**
+
+The frontend provides a web-based interface where users can trigger new music generation, view sensor snapshots, and play the most recent ambient tracks.
 
 
 ## Prerequisites
@@ -14,6 +45,18 @@ Ambient music thrives on context. Here, the environment literally composes the s
 ### Node.js
 
 This project is built using Next.js, which requires Node.js version 16 or higher. You can download and install Node.js from [https://nodejs.org/en](https://nodejs.org/en).
+
+
+
+### OpenAI
+
+Create the OpenAI API key [here](https://platform.openai.com/). You may need to create a project and enable few models.
+
+![openai models](images/enabled-openai-models.png)
+
+In this project, we will use an AI model from OpenAI:
+
+- `gpt-5-mini` to create audio prompt.
 
 ### GridDB
 
@@ -51,6 +94,60 @@ To whitelist the IP, go to the GridDB Cloud Admin and navigate to the **Network 
 
 You need an ElevenLabs account and API key to use this project. You can sign up for an account at [https://elevenlabs.io/signup](https://elevenlabs.io/signup).
 
-After signing up, go to the **Account** section, and create and copy your API key.
+After signing up, go to the [**Developer**](https://elevenlabs.io/app/developers/api-keys) section, and create and copy your API key.
 
 ![ElevenLabs API Key](images/elevenlabs-api-key.png)
+
+And make sure to enable the **Music Generation** access permission.
+
+
+## How to Run
+
+### 1. Clone the repository
+
+Clone the repository from [https://github.com/junwatu/grid-sound-ambient](https://github.com/junwatu/grid-sound-ambient) to your local machine.
+
+```sh
+git clone https://github.com/junwatu/grid-sound-ambient.git
+cd grid-sound-ambient
+cd apps
+```
+
+### 2. Install dependencies
+
+Install all project dependencies using npm.
+
+```sh
+npm install
+```
+
+### 3. Set up environment variables
+
+Copy file `.env.example` to `.env` and fill in the values:
+
+```ini
+# Copy this file to .env.local and add your actual API keys
+# Never commit .env.local to version control
+
+# ElevenLabs API Key for ElevenLabs Music
+ELEVENLABS_API_KEY=
+
+GRIDDB_WEBAPI_URL=
+GRIDDB_PASSWORD=
+GRIDDB_USERNAME=
+```
+
+Please look the section on [Prerequisites](#prerequisites) before running the project.
+
+### 4. Run the project
+
+Run the project using the following command:
+
+```sh
+npm run dev
+```
+
+### 5. Open the application
+
+Open the application in your browser at [http://localhost:3000](http://localhost:3000). You also need to allow the browser to access your microphone.
+
