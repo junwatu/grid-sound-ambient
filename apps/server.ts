@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Request, Response } from 'express';
+import { generateMusicBrief, generateMusicPrompt, type SensorSnapshot } from './libs/openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,41 @@ app.use(express.static(path.join(__dirname, 'dist')));
 // API Routes
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+app.post('/api/sensor/generate-prompt', async (req: Request, res: Response) => {
+  try {
+    const sensorSnapshot: SensorSnapshot = req.body;
+    
+    // Validate required fields
+    if (!sensorSnapshot.timestamp || !sensorSnapshot.zone) {
+      return res.status(400).json({ error: 'Timestamp and zone are required' });
+    }
+
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    if (!openaiApiKey) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    // Generate music brief from sensor data
+    const musicBrief = await generateMusicBrief(sensorSnapshot);
+    
+    // Convert brief to natural language prompt
+    const prompt = await generateMusicPrompt(musicBrief);
+    
+    res.json({
+      sensorSnapshot,
+      musicBrief,
+      prompt,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Prompt generation error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate music prompt',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 app.post('/api/music/compose', async (req: Request, res: Response) => {
