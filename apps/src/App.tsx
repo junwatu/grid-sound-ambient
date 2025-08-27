@@ -33,7 +33,8 @@ interface MusicBrief {
 
 function App() {
   const [sensorInput, setSensorInput] = useState('')
-  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
+  // @ts-ignore
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false) 
   const [isCreatingMusic, setIsCreatingMusic] = useState(false)
   const [isGeneratingComplete, setIsGeneratingComplete] = useState(false)
   const [musicBrief, setMusicBrief] = useState<MusicBrief | null>(null)
@@ -43,6 +44,7 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [showHistory, setShowHistory] = useState(false)
 
+  /**
   const handleGeneratePrompt = async () => {
     if (!sensorInput.trim()) return
 
@@ -80,7 +82,7 @@ function App() {
       setIsGeneratingPrompt(false)
     }
   }
-
+  */
   const handleCreateMusic = async () => {
     if (!generatedPrompt) return
 
@@ -210,18 +212,18 @@ function App() {
               onChange={(e) => setSensorInput(e.target.value)}
             />
             <div className="flex justify-end space-x-3">
-              <Button
+            {/* <Button
                 onClick={handleGeneratePrompt}
                 disabled={!sensorInput.trim() || isGeneratingPrompt || isGeneratingComplete}
                 variant="outline"
               >
                 {isGeneratingPrompt ? 'Generating Prompt...' : 'Generate Prompt Only'}
-              </Button>
+              </Button> */}
               <Button
                 onClick={handleCompleteFlow}
                 disabled={!sensorInput.trim() || isGeneratingComplete || isGeneratingPrompt}
               >
-                {isGeneratingComplete ? 'Processing Complete Flow...' : 'Generate Music & Save to DB'}
+                {isGeneratingComplete ? 'Processing Complete Flow...' : 'Generate Music'}
               </Button>
             </div>
           </div>
