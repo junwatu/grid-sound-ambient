@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { MusicHistory } from '@/components/MusicHistory'
 
 interface SensorSnapshot {
   timestamp: string;
@@ -34,10 +35,13 @@ function App() {
   const [sensorInput, setSensorInput] = useState('')
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
   const [isCreatingMusic, setIsCreatingMusic] = useState(false)
+  const [isGeneratingComplete, setIsGeneratingComplete] = useState(false)
   const [musicBrief, setMusicBrief] = useState<MusicBrief | null>(null)
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null)
   const [result, setResult] = useState<any>(null)
+  const [completeResult, setCompleteResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showHistory, setShowHistory] = useState(false)
 
   const handleGeneratePrompt = async () => {
     if (!sensorInput.trim()) return
@@ -115,6 +119,50 @@ function App() {
     }
   }
 
+  const handleCompleteFlow = async () => {
+    if (!sensorInput.trim()) return
+
+    setIsGeneratingComplete(true)
+    setError(null)
+    setCompleteResult(null)
+    setMusicBrief(null)
+    setGeneratedPrompt(null)
+    setResult(null)
+
+    try {
+      const sensorSnapshot: SensorSnapshot = JSON.parse(sensorInput.trim())
+
+      const response = await fetch('/api/iot/generate-music', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...sensorSnapshot,
+          music_length_ms: 60000,
+          model_id: "music_v1"
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to complete music generation flow')
+      }
+
+      const data = await response.json()
+      setCompleteResult(data)
+      setMusicBrief(data.musicBrief)
+      setGeneratedPrompt(data.prompt)
+      console.log('Complete flow successful:', data)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      setError(errorMessage)
+      console.error('Error in complete flow:', err)
+    } finally {
+      setIsGeneratingComplete(false)
+    }
+  }
+
   const loadExampleSensor = () => {
     const example = {
       timestamp: "2025-01-28T12:05:00",
@@ -136,8 +184,15 @@ function App() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <div className="w-full max-w-4xl">
-        <h1 className="text-4xl font-bold text-center mb-8">Dynamic Ambient Music</h1>
-        <p className="text-center text-gray-600 mb-8">Generate ambient music from building sensor data</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold">Dynamic Ambient Music</h1>
+            <p className="text-gray-600">Generate ambient music from building sensor data</p>
+          </div>
+          <Button variant="outline" onClick={() => setShowHistory(true)}>
+            View History
+          </Button>
+        </div>
 
         <div className="space-y-6">
           {/* Step 1: Sensor Input */}
@@ -154,12 +209,19 @@ function App() {
               value={sensorInput}
               onChange={(e) => setSensorInput(e.target.value)}
             />
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-3">
               <Button
                 onClick={handleGeneratePrompt}
-                disabled={!sensorInput.trim() || isGeneratingPrompt}
+                disabled={!sensorInput.trim() || isGeneratingPrompt || isGeneratingComplete}
+                variant="outline"
               >
-                {isGeneratingPrompt ? 'Generating Prompt...' : 'Generate Music Prompt'}
+                {isGeneratingPrompt ? 'Generating Prompt...' : 'Generate Prompt Only'}
+              </Button>
+              <Button
+                onClick={handleCompleteFlow}
+                disabled={!sensorInput.trim() || isGeneratingComplete || isGeneratingPrompt}
+              >
+                {isGeneratingComplete ? 'Processing Complete Flow...' : 'Generate Music & Save to DB'}
               </Button>
             </div>
           </div>
@@ -197,7 +259,7 @@ function App() {
             </div>
           )}
 
-          {/* Step 3: Generated Music */}
+          {/* Step 3: Generated Music (Individual Flow) */}
           {result && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">3. Generated Music</h2>
@@ -220,8 +282,58 @@ function App() {
               </div>
             </div>
           )}
+
+          {/* Complete Flow Result */}
+          {completeResult && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">🎵 Complete Flow Result</h2>
+              <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-green-600 mb-3">✅ {completeResult.message}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Zone:</p>
+                    <p className="text-sm text-gray-600">{completeResult.sensorSnapshot.zone}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Timestamp:</p>
+                    <p className="text-sm text-gray-600">{completeResult.sensorSnapshot.timestamp}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Audio File:</p>
+                    <p className="text-sm text-gray-600">{completeResult.filename}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Duration:</p>
+                    <p className="text-sm text-gray-600">{completeResult.music_length_ms / 1000}s</p>
+                  </div>
+                </div>
+                <audio controls className="w-full mb-3">
+                  <source src={completeResult.audioPath} type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
+                <div className="flex space-x-4">
+                  <a
+                    href={completeResult.audioPath}
+                    download={completeResult.filename}
+                    className="text-blue-600 hover:text-blue-800 underline text-sm"
+                  >
+                    Download MP3
+                  </a>
+                  <span className="text-gray-400">|</span>
+                  <span className="text-sm text-gray-600">
+                    Saved to GridDB at {new Date(completeResult.generation_timestamp).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <MusicHistory
+        isVisible={showHistory}
+        onClose={() => setShowHistory(false)}
+      />
     </div>
   )
 }
