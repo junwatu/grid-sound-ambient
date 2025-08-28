@@ -132,7 +132,7 @@ Copy file `.env.example` to `.env` and fill in the values:
 # ElevenLabs API Key for ElevenLabs Music
 ELEVENLABS_API_KEY=
 
-OPENAO_API_KEY=
+OPENAI_API_KEY=
 
 GRIDDB_WEBAPI_URL=
 GRIDDB_PASSWORD=
@@ -156,4 +156,9 @@ npm run start
 Open the application in your browser at [http://localhost:3000](http://localhost:3000) or any address that `WEB_URL` set to. You also need to allow the browser to access your microphone.
 
 
-## Implementation Details
+![app screenshot](images/app-sc-1.png)
+
+## Building The Ambient Music Generator
+
+
+
