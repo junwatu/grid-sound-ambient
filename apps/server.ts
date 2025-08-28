@@ -21,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -30,7 +31,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.post('/api/sensor/generate-prompt', async (req: Request, res: Response) => {
   try {
     const sensorSnapshot: SensorSnapshot = req.body;
-    
+
     // Validate required fields
     if (!sensorSnapshot.timestamp || !sensorSnapshot.zone) {
       return res.status(400).json({ error: 'Timestamp and zone are required' });
@@ -43,10 +44,10 @@ app.post('/api/sensor/generate-prompt', async (req: Request, res: Response) => {
 
     // Generate music brief from sensor data
     const musicBrief = await generateMusicBrief(sensorSnapshot);
-    
+
     // Convert brief to natural language prompt
     const prompt = await generateMusicPrompt(musicBrief);
-    
+
     res.json({
       sensorSnapshot,
       musicBrief,
@@ -55,7 +56,7 @@ app.post('/api/sensor/generate-prompt', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Prompt generation error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to generate music prompt',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -116,7 +117,7 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
   try {
     const sensorSnapshot: SensorSnapshot = req.body;
     const { music_length_ms = 60000, model_id = "music_v1" } = req.body;
-    
+
     // Validate required fields
     if (!sensorSnapshot.timestamp || !sensorSnapshot.zone) {
       return res.status(400).json({ error: 'Timestamp and zone are required' });
@@ -124,11 +125,11 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
 
     const openaiApiKey = process.env.OPENAI_API_KEY;
     const elevenlabsApiKey = process.env.ELEVENLABS_API_KEY;
-    
+
     if (!openaiApiKey) {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
-    
+
     if (!elevenlabsApiKey) {
       return res.status(500).json({ error: 'ElevenLabs API key not configured' });
     }
@@ -136,11 +137,11 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
     // Step 1: Generate music brief from sensor data
     console.log('Generating music brief from sensor data...');
     const musicBrief = await generateMusicBrief(sensorSnapshot);
-    
+
     // Step 2: Convert brief to natural language prompt
     console.log('Converting brief to music prompt...');
     const prompt = await generateMusicPrompt(musicBrief);
-    
+
     // Step 3: Generate audio using ElevenLabs
     console.log('Generating audio with ElevenLabs...');
     const response = await fetch("https://api.elevenlabs.io/v1/music", {
@@ -162,12 +163,12 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
     }
 
     const audioBuffer = await response.arrayBuffer();
-    
+
     // Step 4: Save audio file
     console.log('Saving audio file...');
     const filename = generateAudioFilename(sensorSnapshot.zone, sensorSnapshot.timestamp);
     const audioPath = await saveAudioFile(audioBuffer, filename);
-    
+
     // Step 5: Save complete record to GridDB
     console.log('Saving record to GridDB...');
     const musicRecord: MusicGenerationRecord = {
@@ -193,7 +194,7 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
     };
 
     await saveMusicGeneration(musicRecord);
-    
+
     // Return complete response with metadata
     res.json({
       success: true,
@@ -207,10 +208,10 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
       generation_timestamp: musicRecord.generation_timestamp,
       message: 'Music generated and saved successfully'
     });
-    
+
   } catch (error) {
     console.error('Complete music generation flow error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to complete music generation flow',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -222,24 +223,24 @@ app.get('/api/music/history', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 100;
     const zone = req.query.zone as string;
-    
+
     let records: MusicGenerationRecord[];
-    
+
     if (zone) {
       records = await getMusicGenerationsByZone(zone, limit);
     } else {
       records = await getMusicGenerations(limit);
     }
-    
+
     res.json({
       success: true,
       records,
       count: records.length
     });
-    
+
   } catch (error) {
     console.error('Failed to retrieve music history:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to retrieve music history',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -254,10 +255,10 @@ app.get('*', (_req: Request, res: Response) => {
 // Initialize server with database setup
 async function startServer() {
   console.log('🚀 Starting Dynamic Ambient Music Server...');
-  
+
   // Initialize GridDB on startup
   await initGridDBOnStartup();
-  
+
   // Start the Express server
   app.listen(PORT, () => {
     console.log(`🌐 Server is running on ${WEB_URL}`);

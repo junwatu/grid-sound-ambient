@@ -161,4 +161,63 @@ Open the application in your browser at [http://localhost:3000](http://localhost
 ## Building The Ambient Music Generator
 
 
+### IoT Data
+
+In this project we will use pre-made IoT data. The data is an array of sensor snapshots. Each object is a single time-stamped reading for a building zone. This data mimic real data condition from the IoT sensor.
+
+```json
+[
+  {
+    "timestamp": "2025-08-20T09:15:00",
+    "zone": "Meeting Room A",
+    "temperature_c": 22.8,
+    "humidity_pct": 47,
+    "co2_ppm": 1020,
+    "voc_index": 185,
+    "occupancy": 7,
+    "noise_dba": 49,
+    "productivity_score": 65,
+    "trend_10min.co2_ppm_delta": 120,
+    "trend_10min.noise_dba_delta": 1,
+    "trend_10min.productivity_delta": -5
+  },
+  ...
+]
+```
+
+You can look the data sample in the `apps/data/iot_music_samples.json`.
+
+## User Interface
+
+The UI is a small React app (Vite + Tailwind) that drives the end‑to‑end flow and plays generated audio.
+
+The workflow for the user is:
+
+1. Click the **Load example** button to load sensor data into the text input or you can paste a single sensor snapshot JSON into the textarea from `apps/data/iot_music_samples.json` file.
+2. Click “Generate Music” to call.
+3. The app displays the generated prompt, a brief (expandable), and an HTML5 audio player.
+4. Optionally, You can open “View History” to fetch recent records and replay saved tracks.
+
+![app flow UI](images/app-flow.png)
+
+These are the server routes use by the client side UI:
+
+| Method & Route              | Trigger in UI                          | Purpose                                      Consumes                                                   |
+|----------------------------|----------------------------------------|----------------------------------------------
+| `POST` `/api/iot/generate-music` | **Generate Music** button                 | Full pipeline: brief → prompt → music → save 
+| `POST` `/api/music/compose`      | **Create Music** (after prompt exists)    | Generate music from existing prompt          
+| `GET`  `/api/music/history`      | **View History** modal                    | Load saved generations                       
+| `GET`  `/audio/<filename>`       | Audio players in results/history        | Stream ambient music from server                 
+
+The client data returned from the server is JSON. It contains all the data needed for the UI, from music prompt, music brief to audio metadata such as audio path and filename.
+
+![json data](images/client-data.png)
+
+One thing to note here is that OpenAI model is being used to generate music brief which is in JSON AND the music prompt. The reason here is flexibility, the same music brief can be used with other or better non-OpenAI models and also as separation of concerns to handle noisy IoT data in a real situation.
+
+## Generate Music Prompt
+
+
+### Music Brief
+
 
