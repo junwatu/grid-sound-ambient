@@ -213,11 +213,74 @@ The client data returned from the server is JSON. It contains all the data neede
 
 ![json data](images/client-data.png)
 
-One thing to note here is that OpenAI model is being used to generate music brief which is in JSON AND the music prompt. The reason here is flexibility, the same music brief can be used with other or better non-OpenAI models and also as separation of concerns to handle noisy IoT data in a real situation.
+One thing to note here is that OpenAI model is being used to generate music brief which is in JSON AND the music prompt.
 
 ## Generate Music Prompt
 
-
 ### Music Brief
 
+This project generate a music brief before the final prompt to provide flexibility and a clear separation of concerns. The brief normalizes noisy IoT data into structured parameters, and the same brief can be reused with other (including non‑OpenAI) models without changing the mapping, making it robust for real‑world conditions.
+
+Here the result example of the music brief:
+
+
+```json
+{
+  "mood": "soothing",
+  "energy": 48,
+  "tension": 30,
+  "bpm": [
+    50,
+    64
+  ],
+  "duration_sec": 60,
+  "loopable": true,
+  "key_suggestion": "A minor",
+  "instrument_focus": [
+    "warm pads",
+    "soft piano",
+    "breathy synth",
+    "warm low strings",
+    "subtle low percussion"
+  ],
+  "texture_notes": "Airy, sparse texture with warm low mids and a gentle high-frequency roll-off to avoid brightness.",
+  "rationale": "CO2 >1000 ppm and rising calls for lower-energy, soothing airiness; occupancy is low and temp/humidity are ideal, so use sparse warm timbres and minimal rhythmic drive to reduce stress."
+}
+```
+
+Music brief generation is handled by `generateMusicBrief(sensorSnapshot)`. It takes a single IoT sensor snapshot and uses the OpenAI model gpt-5-mini to produce the brief. The full code can be found in the `lib\openai.ts` file.
+
+The important part of the code is the AI system prompt:
+
+```ts
+   const systemPrompt = `
+You are an assistant that converts building sensor snapshots into a concise “music brief” for an ambient soundtrack generator.
+Return ONLY compact JSON with these fields:
+{
+  "mood": "calm|focused|energizing|soothing|alert|uplifting|neutral",
+  "energy": 0-100,
+  "tension": 0-100,
+  "bpm": [low, high],
+  "duration_sec": number,
+  "loopable": true|false,
+  "key_suggestion": "A minor|D minor|C major|... (optional)",
+  "instrument_focus": ["pads","soft piano","light percussion", ...],
+  "texture_notes": "short sentence on space/density/brightness",
+  "rationale": "1–2 sentences mapping readings→choice"
+}
+
+Decision rules:
+- High CO2 (>1000 ppm) or high VOC (>200) → lower energy (35–55), soothing/airiness to reduce stress; avoid bright highs.
+- High occupancy (>25) with good air (CO2 < 800) → moderate energy (55–70) and gentle momentum; keep distractions low (no sharp transients).
+- High noise (>60 dBA) → simpler textures, fewer rhythmic accents; tighten BPM range.
+- Productivity_score < 60 → light uplift (energy +10), but stay minimal.
+- Temperature 22–24°C & humidity 45–55% is ideal; if outside, reduce tension slightly and favor warm timbres.
+Prefer keys: minor for calming/focus, major for uplifting.
+Keep outputs steady and minimal; no reactivity to single-sample spikes—assume 10–15 min trend.
+`;
+```
+
+This system prompt direct the behaviour of the model AI to create a music brief with pre-defined data structure using decision rules. If you want to enhance this project, this is the crucial part where you can adjust it to your requirement.
+
+### Music Prompt
 
