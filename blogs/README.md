@@ -348,7 +348,7 @@ This is the example of the generated music prompt:
 
 ## Generate Ambient Music
 
-After the music brief and music prompt generation, the next step is to generate the ambient music. This workflow handled by the `composeMusic()` function:
+After the music brief and music prompt generation, the next step is to generate the ambient music. This workflow handled by the `composeMusic()` function (full source code in the `libs\elevenlabs.ts` file):
 
 ```ts
 export async function composeMusic({
@@ -381,8 +381,115 @@ export async function composeMusic({
 }
 ```
 
-Basically, the code will call ElevenLabs Music API that using the latest `music_v1` model. However, in this project, the duration of the generated music is hardcoded to 60 second or 1 minute. 
+Basically, the code will call ElevenLabs Music API that using the latest `music_v1` model. However, in this project, the duration of the generated music is hardcoded to 60 second or 1 minute. You can edit this directly in the source code by changing the `music_length_ms = 60000` code.
 
-## Save Data
+## Database
 
+The container type use in this project us collection and the schema for the data define by this interface `MusicGenerationRecord` code:
+
+```ts
+export interface MusicGenerationRecord {
+    timestamp: string;
+    zone: string;
+    temperature_c: number;
+    humidity_pct: number;
+    co2_ppm: number;
+    voc_index: number;
+    occupancy: number;
+    noise_dba: number;
+    productivity_score: number;
+    trend_10min_co2_ppm_delta: number;
+    trend_10min_noise_dba_delta: number;
+    trend_10min_productivity_delta: number;
+    music_brief: string;
+    music_prompt: string;
+    audio_path: string;
+    audio_filename: string;
+    music_length_ms: number;
+    model_id: string;
+    generation_timestamp: string;
+}
+```
+And if you have access to the GridDB cloud dashboard, you will see these column created based on the interface fields and it's type.
+
+![griddb column](images/griddb-columns.png)
+
+### Save Data
+
+The save process will save the IoT data, music briefs, music prompts, audio path, audio filename, and timestamp on every successfull music generation and the function that responsible for this task is the `saveMusicGeneration(musicRecord)` function, initially it will check if the container `music_generations` exist or not and if exist than the data will be saved to the database. 
+
+```ts
+export async function saveMusicGeneration(record: MusicGenerationRecord): Promise<void> {
+    if (!GRIDDB_CONFIG.griddbWebApiUrl) {
+        console.warn('⚠️  GridDB not configured, skipping database save');
+        return;
+    }
+
+    await initGridDB();
+
+    try {
+        const client = getGridDBClient();
+        const containerName = 'music_generations';
+        console.log(`💾 Saving music generation record for zone: ${record.zone}`);
+
+        // Generate a unique ID that fits in INTEGER range (max 2,147,483,647)
+        // Use a combination of current time modulo and random number
+        const timeComponent = Date.now() % 1000000; // Last 6 digits of timestamp
+        const randomComponent = Math.floor(Math.random() * 1000); // 3 digit random
+        const id = timeComponent * 1000 + randomComponent;
+
+        // Prepare the data object for insertion with proper date formatting
+        const data = {
+            id,
+            timestamp: new Date(record.timestamp),
+            zone: record.zone,
+            temperature_c: record.temperature_c,
+            humidity_pct: record.humidity_pct,
+            co2_ppm: record.co2_ppm,
+            voc_index: record.voc_index,
+            occupancy: record.occupancy,
+            noise_dba: record.noise_dba,
+            productivity_score: record.productivity_score,
+            trend_10min_co2_ppm_delta: record.trend_10min_co2_ppm_delta,
+            trend_10min_noise_dba_delta: record.trend_10min_noise_dba_delta,
+            trend_10min_productivity_delta: record.trend_10min_productivity_delta,
+            music_brief: record.music_brief,
+            music_prompt: record.music_prompt,
+            audio_path: record.audio_path,
+            audio_filename: record.audio_filename,
+            music_length_ms: record.music_length_ms,
+            model_id: record.model_id,
+            generation_timestamp: new Date(record.generation_timestamp)
+        };
+
+        // Use the fixed insert method that now handles schema-aware transformation
+        await client.insert({
+            containerName,
+            data: data
+        });
+
+        console.log(`✅ Music generation record saved to GridDB (ID: ${id}, Zone: ${record.zone}, File: ${record.audio_filename})`);
+    } catch (error) {
+        console.error('❌ Failed to save music generation record:', error);
+        throw error;
+    }
+}
+```
+
+### Read Data
+
+To view histroy of the music generations, it needs read data operation from the database and this task internally handled by the `getMusicGenerations()` function. 
+
+```ts
+const client = getGridDBClient();
+const containerName = 'music_generations';
+console.log(`📊 Retrieving ${limit} music generation records from GridDB`);
+
+const results = await client.select({
+    containerName,
+    orderBy: 'generation_timestamp',
+    order: 'DESC',
+    limit
+});
+```
 
