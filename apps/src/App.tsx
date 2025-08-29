@@ -45,6 +45,9 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [showHistory, setShowHistory] = useState(false)
 
+  // Disable Generate button when a track already exists
+  const hasGeneratedMusic = Boolean(completeResult || result)
+
   /*
   const handleGeneratePrompt = async () => {
     if (!sensorInput.trim()) return
@@ -168,6 +171,12 @@ function App() {
   }
 
   const loadExampleSensor = () => {
+    // Clear previous results to re-enable Generate button
+    setCompleteResult(null)
+    setResult(null)
+    setGeneratedPrompt(null)
+    setMusicBrief(null)
+
     const example = {
       timestamp: "2025-01-28T12:05:00",
       zone: "Cafeteria",
@@ -211,7 +220,16 @@ function App() {
               placeholder="Paste sensor snapshot JSON here..."
               className="min-h-[200px] resize-none font-mono text-sm"
               value={sensorInput}
-              onChange={(e) => setSensorInput(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value
+                setSensorInput(v)
+                if (v.trim() === '') {
+                  setCompleteResult(null)
+                  setResult(null)
+                  setGeneratedPrompt(null)
+                  setMusicBrief(null)
+                }
+              }}
             />
             <div className="flex justify-end space-x-3">
               {/** Disabled: Generate Prompt Only (server route disabled)
@@ -225,7 +243,7 @@ function App() {
               */}
               <Button
                 onClick={handleCompleteFlow}
-                disabled={!sensorInput.trim() || isGeneratingComplete || isGeneratingPrompt}
+                disabled={!sensorInput.trim() || isGeneratingComplete || isGeneratingPrompt || hasGeneratedMusic}
               >
                 {isGeneratingComplete ? 'Processing Complete Flow...' : 'Generate Music'}
               </Button>
