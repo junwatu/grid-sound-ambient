@@ -6,7 +6,7 @@ This tutorial shows how to generate evolving ambient music driven by IoT sensor 
 
 ## Introduction
 
-Ambient music thrives on context. Here, the environment literally composes the score. Heat can slow the tempo, humidity can soften the timbre, and human presence can thicken the arrangement. We’ll stitch together a small system: devices post telemetry (we will use the data directly), GridDB keeps the data, the AI model create music parameters, and ElevenLabs will renders audio that you can play instantly in the browser.
+Ambient music thrives on context. Here, the environment literally composes the score. Heat can slow the tempo, humidity can soften the timbre, and human presence can thicken the arrangement. We’ll stitch together a small system: devices post telemetry (we will use the data directly), GridDB keeps the data, the AI model creates music parameters, and ElevenLabs will render audio that you can play instantly in the browser.
 
 ## System Architecture
 
@@ -44,19 +44,19 @@ The frontend provides a web-based interface where users can trigger new music ge
 
 ### Node.js
 
-This project is built using Next.js, which requires Node.js version 16 or higher. You can download and install Node.js from [https://nodejs.org/en](https://nodejs.org/en).
+This project is built using React + Vite, which requires Node.js version 16 or higher. You can download and install Node.js from [https://nodejs.org/en](https://nodejs.org/en).
 
 
 
 ### OpenAI
 
-Create the OpenAI API key [here](https://platform.openai.com/). You may need to create a project and enable few models.
+Create the OpenAI API key [here](https://platform.openai.com/). You may need to create a project and enable a few models.
 
 ![openai models](images/enabled-openai-models.png)
 
 In this project, we will use an AI model from OpenAI:
 
-- `gpt-5-mini` to create audio prompt.
+- `gpt-5-mini` to create an audio prompt.
 
 ### GridDB
 
@@ -74,7 +74,7 @@ Go to the GridDB Cloud Portal and copy the WebAPI URL from the **Clusters** sect
 
 #### GridDB Username and Password
 
-Go to the **GridDB Users** section of the GridDB Cloud portal and create or copy the username for `GRIDDB_USERNAME`. The password is set when the user is created for the first time, use this as the `GRIDDB_PASSWORD`.
+Go to the **GridDB Users** section of the GridDB Cloud portal and create or copy the username for `GRIDDB_USERNAME`. The password is set when the user is created for the first time. Use this as the `GRIDDB_PASSWORD`.
 
 ![GridDB Users](images/griddb-cloud-users.png)
 
@@ -141,7 +141,7 @@ GRIDDB_USERNAME=
 WEB_URL=http://localhost:3000
 ```
 
-Please look the section on [Prerequisites](#prerequisites) before running the project.
+Please look at the section on [Prerequisites](#prerequisites) before running the project.
 
 ### 4. Run the project
 
@@ -153,7 +153,7 @@ npm run start
 
 ### 5. Open the application
 
-Open the application in your browser at [http://localhost:3000](http://localhost:3000) or any address that `WEB_URL` set to. You also need to allow the browser to access your microphone.
+Open the application in your browser at [http://localhost:3000](http://localhost:3000) or any address that `WEB_URL` is set to. You also need to allow the browser to access your microphone.
 
 
 ![app screenshot](images/app-sc-1.png)
@@ -163,7 +163,7 @@ Open the application in your browser at [http://localhost:3000](http://localhost
 
 ### IoT Data
 
-In this project we will use pre-made IoT data. The data is an array of sensor snapshots. Each object is a single time-stamped reading for a building zone. This data mimic real data condition from the IoT sensor.
+In this project, we will use pre-made IoT data. The data is an array of sensor snapshots. Each object is a single time-stamped reading for a building zone. This data mimics real data conditions from the IoT sensor.
 
 ```json
 [
@@ -185,7 +185,7 @@ In this project we will use pre-made IoT data. The data is an array of sensor sn
 ]
 ```
 
-You can look the data sample in the `apps/data/iot_music_samples.json`.
+You can look at the data sample in the `apps/data/iot_music_samples.json`.
 
 ## User Interface
 
@@ -193,12 +193,12 @@ The UI is a small React app (Vite + Tailwind) that drives the end‑to‑end flo
 
 The workflow for the user is:
 
-1. Click the **Load example** button to load sensor data into the text input or you can paste a single sensor snapshot JSON into the textarea from `apps/data/iot_music_samples.json` file.
+1. Click the **Load example** button to load sensor data into the text input, or you can paste a single sensor snapshot JSON into the textarea from the `apps/data/iot_music_samples.json` file.
 2. Click “Generate Music” to call.
-3. The app displays the generated prompt, a brief (expandable), and an HTML5 audio player.
-4. Optionally, You can open “View History” to fetch recent records and replay saved tracks.
+3. The app displays the generated prompt, a brief (expandable) description, and an HTML5 audio player.
+4. Optionally, you can open “View History” to fetch recent records and replay saved tracks.
 
-These are the server routes use by the client side UI:
+These are the server routes used by the client-side UI:
 
 | Method & Route              | Trigger in UI                          | Purpose                                      Consumes                                                   |
 |----------------------------|----------------------------------------|----------------------------------------------
@@ -206,17 +206,17 @@ These are the server routes use by the client side UI:
 | `GET`  `/api/music/history`      | **View History** modal                    | Load saved generations                       
 | `GET`  `/audio/<filename>`       | Audio players in results/history        | Stream ambient music from server                 
 
-The client data returned from the server is JSON. It contains all the data needed for the UI, from music prompt, music brief to audio metadata such as audio path and filename.
+The client data returned from the server is JSON. It contains all the data needed for the UI, from music prompt, music brief, to audio metadata such as audio path and filename.
 
 
 ![json data](images/client-data.png)
 
-One thing to note here is that OpenAI model is being used to generate music brief AND the music prompt. What's the different? please, read the next section.
+One thing to note here is that the OpenAI model is being used to generate music brief AND the music prompt. What's the difference? Please, read the next section.
 
 
 ### Result UI
 
-Other than user input for IoT data snapshot, after succesfully generated ambient music the result user interface will render:
+Other than user input for IoT data snapshot, after successfully generating ambient music, the result user interface will render:
 
 1. Generated music prompt (+ Music bried details)
 2. Music player, it's information, and the download link.
@@ -234,9 +234,9 @@ When the user clicks the **View History** button, the app changes state to displ
 
 ### Music Brief
 
-This project generate a music brief before the final prompt to provide flexibility and a clear separation of concerns. The brief normalizes noisy IoT data into structured parameters, and the same brief can be reused with other (including non‑OpenAI) models without changing the mapping, making it robust for real‑world conditions.
+This project generates a music brief before the final prompt to provide flexibility and a clear separation of concerns. The brief normalizes noisy IoT data into structured parameters, and the same brief can be reused with other (including non‑OpenAI) models without changing the mapping, making it robust for real‑world conditions.
 
-Here the result example of the music brief:
+Here is an example of the music brief:
 
 
 ```json
@@ -272,16 +272,16 @@ The important part of the code is the AI system prompt:
 You are an assistant that converts building sensor snapshots into a concise “music brief” for an ambient soundtrack generator.
 Return ONLY compact JSON with these fields:
 {
-  "mood": "calm|focused|energizing|soothing|alert|uplifting|neutral",
-  "energy": 0-100,
-  "tension": 0-100,
-  "bpm": [low, high],
-  "duration_sec": number,
-  "loopable": true|false,
-  "key_suggestion": "A minor|D minor|C major|... (optional)",
-  "instrument_focus": ["pads","soft piano","light percussion", ...],
-  "texture_notes": "short sentence on space/density/brightness",
-  "rationale": "1–2 sentences mapping readings→choice"
+ "mood": "calm|focused|energizing|soothing|alert|uplifting|neutral",
+ "energy": 0-100,
+ "tension": 0-100,
+ "bpm": [low, high],
+ "duration_sec": number,
+ "loopable": true|false,
+ "key_suggestion": "A minor|D minor|C major|... (optional)",
+ "instrument_focus": ["pads","soft piano","light percussion", ...],
+ "texture_notes": "short sentence on space/density/brightness",
+ "rationale": "1–2 sentences mapping readings→choice"
 }
 
 Decision rules:
@@ -295,11 +295,11 @@ Keep outputs steady and minimal; no reactivity to single-sample spikes—assume 
 `;
 ```
 
-This system prompt direct the behaviour of the model AI to create a music brief with pre-defined data structure using decision rules. If you want to enhance this project, this is the crucial part where you can adjust the decision rules to your requirement.
+This system prompts the behaviour of the model AI to create a music brief with a pre-defined data structure using decision rules. If you want to enhance this project, this is the crucial part where you can adjust the decision rules to your requirements.
 
 ### Music Prompt
 
-The music prompt is generated using `generateMusicPrompt(musicBrief)` function. This function will call OpenAI model gpt-5-mini to generate music prompt based on the music brief input.
+The music prompt is generated using the `generateMusicPrompt(musicBrief)` function. This function will call the OpenAI model gpt-5-mini to generate a music prompt based on the music brief input.
 
 
 ```ts
@@ -315,7 +315,7 @@ const response = await openai.responses.create({
     } as any);
 ```
 
-What's important here is the system prompt that set in the AI model.
+What's important here is the system prompt that is set in the AI model.
 
 ```js
     const systemPrompt = `
@@ -338,9 +338,9 @@ Goal: steady momentum that supports concentration without masking speech."
 `;
 ```
 
-Again, you can customize this system prompt to meet any of your custom project requirements before feed it to music generation. The full source code for music prompt generation is in the `libs\openai.ts` file.
+Again, you can customize this system prompt to meet any of your custom project requirements before feeding it to music generation. The full source code for music prompt generation is in the `libs\openai.ts` file.
 
-This is the example of the generated music prompt:
+This is an example of the generated music prompt:
 
 ```json
 "Calm. Energy 60/100, tension 25/100.\nTempo: 58–64 BPM, duration ~60s, loopable. Key: A minor.\nInstruments: warm pads, soft electric piano, subtle low bass, minimal brushed percussion.\nTexture: sparse, warm, low‑mid focused with airy pads and subdued transients; avoid sharp/bright transients to prevent masking ambient noise. Goal: gentle uplift and comfort without masking background."
@@ -359,33 +359,33 @@ export async function composeMusic({
 }: ComposeParams): Promise<ArrayBuffer> {
   if (!apiKey) {
     throw new Error('ElevenLabs API key not configured');
-  }
+ }
 
   const response = await fetch("https://api.elevenlabs.io/v1/music", {
     method: "POST",
     headers: {
       "xi-api-key": apiKey,
       "Content-Type": "application/json",
-    },
+ },
     body: JSON.stringify({ prompt, music_length_ms, model_id }),
-  });
+ });
 
   if (!response.ok) {
     const errorText = await response.text();
     const err: any = new Error(`ElevenLabs API error: ${errorText}`);
     err.status = response.status;
     throw err;
-  }
+ }
 
   return await response.arrayBuffer();
 }
 ```
 
-Basically, the code will call ElevenLabs Music API that using the latest `music_v1` model. However, in this project, the duration of the generated music is hardcoded to 60 second or 1 minute. You can edit this directly in the source code by changing the `music_length_ms = 60000` code.
+Basically, the code will call ElevenLabs Music API, which uses the latest `music_v1` model. However, in this project, the duration of the generated music is hardcoded to 60 seconds or 1 minute. You can edit this directly in the source code by changing the `music_length_ms = 60000` code.
 
 ## Database
 
-The container type use in this project us collection and the schema for the data define by this interface `MusicGenerationRecord` code:
+The container type used in this project is collection, and the schema for the data is defined by the interface `MusicGenerationRecord` code:
 
 ```ts
 export interface MusicGenerationRecord {
@@ -410,7 +410,7 @@ export interface MusicGenerationRecord {
     generation_timestamp: string;
 }
 ```
-And if you have access to the GridDB cloud dashboard, you will see these column created based on the interface fields and it's type.
+And if you have access to the GridDB cloud dashboard, you will see these columns created based on the interface fields and their type.
 
 ![griddb column](images/griddb-columns.png)
 
@@ -423,7 +423,7 @@ export async function saveMusicGeneration(record: MusicGenerationRecord): Promis
     if (!GRIDDB_CONFIG.griddbWebApiUrl) {
         console.warn('⚠️  GridDB not configured, skipping database save');
         return;
-    }
+ }
 
     await initGridDB();
 
@@ -460,25 +460,25 @@ export async function saveMusicGeneration(record: MusicGenerationRecord): Promis
             music_length_ms: record.music_length_ms,
             model_id: record.model_id,
             generation_timestamp: new Date(record.generation_timestamp)
-        };
+ };
 
         // Use the fixed insert method that now handles schema-aware transformation
         await client.insert({
             containerName,
             data: data
-        });
+ });
 
         console.log(`✅ Music generation record saved to GridDB (ID: ${id}, Zone: ${record.zone}, File: ${record.audio_filename})`);
-    } catch (error) {
+ } catch (error) {
         console.error('❌ Failed to save music generation record:', error);
         throw error;
-    }
+ }
 }
 ```
 
 ### Read Data
 
-To view histroy of the music generations, it needs read data operation from the database and this task internally handled by the `getMusicGenerations()` function. 
+To view the history of the music generations, it needs to read data from the database, and this task is internally handled by the `getMusicGenerations()` function. 
 
 ```ts
 const client = getGridDBClient();
@@ -486,16 +486,16 @@ const containerName = 'music_generations';
 console.log(`📊 Retrieving ${limit} music generation records from GridDB`);
 
 const results = await client.select({
-    containerName,
+ containerName,
     orderBy: 'generation_timestamp',
     order: 'DESC',
-    limit
+ limit
 });
 ```
 
-The `client.select()` function is basically wrapper for SQL SELECT, for the full source code for this function, you can look in the `libs\griddb.ts` file.
+The `client.select()` function is basically a wrapper for SQL SELECT. For the full source code for this function, you can look in the `libs\griddb.ts` file.
 
 
 ## Further Enhancements
 
-This project is a simple prototype of what we can do using AI and GridDB database. In the real scenario you need to wire the app with real IoT sensor data.
+This project is a simple prototype of what we can do using AI and the GridDB database. In the real scenario, you need to wire the app with real IoT sensor data.
