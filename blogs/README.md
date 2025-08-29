@@ -518,4 +518,4 @@ The generated music is served as static files, so any `/audio/<filename>.mp3` UR
 
 ## Further Enhancements
 
-This project is a simple prototype of what we can do using AI and the GridDB database. In the real scenario, you need to wire the app with real IoT sensor data.
+This project is a simple prototype of what we can do using IoT, AI and the GridDB database. In the real scenario, you need to wire the app with real IoT sensor data.
