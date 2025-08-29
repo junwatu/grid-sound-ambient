@@ -383,6 +383,8 @@ export async function composeMusic({
 
 Basically, the code will call ElevenLabs Music API, which uses the latest `music_v1` model. However, in this project, the duration of the generated music is hardcoded to 60 seconds or 1 minute. You can edit this directly in the source code by changing the `music_length_ms = 60000` code.
 
+The default audio output format from the ElevenLabs Music API is `mp3_44100_128`. The API also supports several other formats, for a complete list, refer to the official [documentation](https://elevenlabs.io/docs/api-reference/music/compose).
+
 ## Database
 
 The container type used in this project is collection, and the schema for the data is defined by the interface `MusicGenerationRecord` code:
@@ -494,6 +496,24 @@ const results = await client.select({
 ```
 
 The `client.select()` function is basically a wrapper for SQL SELECT. For the full source code for this function, you can look in the `libs\griddb.ts` file.
+
+
+## Node.js Server
+
+All backend functionality is handled by the Node.js server. It exposes a few routes that can be used by the client application or for manual API testing.
+
+**Server Routes**
+
+| Method | Path                      | Purpose                                                                                  |
+|--------|---------------------------|------------------------------------------------------------------------------------------|
+| GET    | `/api/health`             | Health check with current timestamp                                                      |
+| POST   | `/api/iot/generate-music` | Generate music based on the IoT data |
+| GET    | `/api/music/history`      | List past generations                         |
+
+
+This server also has a function to save the generated music file into the local `public/audio` directory. It generates a clean MP3 filename using the `generateAudioFilename(zone, timestamp)` function and writes the audio buffer to `apps/public/audio/<filename>`. The function then returns the public URL path `/audio/<filename>`.
+
+The generated music is served as static files, so any `/audio/<filename>.mp3` URL is directly accessible over HTTP. You can open these files directly in a browser.
 
 
 ## Further Enhancements
