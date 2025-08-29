@@ -33,9 +33,10 @@ interface MusicBrief {
 
 function App() {
   const [sensorInput, setSensorInput] = useState('')
-  // @ts-ignore
-  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false) 
-  const [isCreatingMusic, setIsCreatingMusic] = useState(false)
+  // @ts-ignore - setter may be unused when prompt route is disabled
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState<boolean>(false)
+  // @ts-ignore - state unused when compose route is disabled
+  const [isCreatingMusic, setIsCreatingMusic] = useState<boolean>(false)
   const [isGeneratingComplete, setIsGeneratingComplete] = useState(false)
   const [musicBrief, setMusicBrief] = useState<MusicBrief | null>(null)
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null)
@@ -44,7 +45,7 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [showHistory, setShowHistory] = useState(false)
 
-  /**
+  /*
   const handleGeneratePrompt = async () => {
     if (!sensorInput.trim()) return
 
@@ -82,7 +83,7 @@ function App() {
       setIsGeneratingPrompt(false)
     }
   }
-  */
+
   const handleCreateMusic = async () => {
     if (!generatedPrompt) return
 
@@ -120,6 +121,7 @@ function App() {
       setIsCreatingMusic(false)
     }
   }
+  */
 
   const handleCompleteFlow = async () => {
     if (!sensorInput.trim()) return
@@ -212,13 +214,15 @@ function App() {
               onChange={(e) => setSensorInput(e.target.value)}
             />
             <div className="flex justify-end space-x-3">
-            {/* <Button
+              {/** Disabled: Generate Prompt Only (server route disabled)
+              <Button
                 onClick={handleGeneratePrompt}
                 disabled={!sensorInput.trim() || isGeneratingPrompt || isGeneratingComplete}
                 variant="outline"
               >
                 {isGeneratingPrompt ? 'Generating Prompt...' : 'Generate Prompt Only'}
-              </Button> */}
+              </Button>
+              */}
               <Button
                 onClick={handleCompleteFlow}
                 disabled={!sensorInput.trim() || isGeneratingComplete || isGeneratingPrompt}
@@ -243,6 +247,7 @@ function App() {
                   </pre>
                 </details>
               )}
+              {/** Disabled: Create Music (server route disabled)
               <div className="flex justify-end">
                 <Button
                   onClick={handleCreateMusic}
@@ -251,6 +256,7 @@ function App() {
                   {isCreatingMusic ? 'Creating Music...' : 'Create Music'}
                 </Button>
               </div>
+              */}
             </div>
           )}
 

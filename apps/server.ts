@@ -6,6 +6,7 @@ import { Request, Response } from 'express';
 import { generateMusicBrief, generateMusicPrompt, type SensorSnapshot } from './libs/openai.js';
 import { saveMusicGeneration, getMusicGenerations, getMusicGenerationsByZone, type MusicGenerationRecord, initGridDBOnStartup } from './libs/griddb.js';
 import { saveAudioFile, generateAudioFilename } from './libs/fileUtils.js';
+import { composeMusic } from './libs/elevenlabs.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,11 +24,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Helpers
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} not configured`);
+  }
+  return value;
+}
+
 // API Routes
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+/*
+// Disabled: sensor prompt generation (not used by client)
 app.post('/api/sensor/generate-prompt', async (req: Request, res: Response) => {
   try {
     const sensorSnapshot: SensorSnapshot = req.body;
@@ -37,10 +49,8 @@ app.post('/api/sensor/generate-prompt', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Timestamp and zone are required' });
     }
 
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (!openaiApiKey) {
-      return res.status(500).json({ error: 'OpenAI API key not configured' });
-    }
+    // Ensure OpenAI is configured
+    requireEnv('OPENAI_API_KEY');
 
     // Generate music brief from sensor data
     const musicBrief = await generateMusicBrief(sensorSnapshot);
@@ -62,7 +72,10 @@ app.post('/api/sensor/generate-prompt', async (req: Request, res: Response) => {
     });
   }
 });
+*/
 
+/*
+// Disabled: direct music composition (not used by client)
 app.post('/api/music/compose', async (req: Request, res: Response) => {
   try {
     const { prompt, music_length_ms = 60000, model_id = "music_v1" } = req.body;
@@ -71,31 +84,15 @@ app.post('/api/music/compose', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'ElevenLabs API key not configured' });
+    // Generate audio with ElevenLabs via helper
+    let audioBuffer: ArrayBuffer;
+    try {
+      audioBuffer = await composeMusic({ prompt, music_length_ms, model_id });
+    } catch (e) {
+      const status = (e as any)?.status || 500;
+      const message = e instanceof Error ? e.message : 'Unknown error';
+      return res.status(status).json({ error: message });
     }
-
-    const response = await fetch("https://api.elevenlabs.io/v1/music", {
-      method: "POST",
-      headers: {
-        "xi-api-key": apiKey,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt,
-        music_length_ms,
-        model_id
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).json({ error: errorText });
-    }
-
-    // The response is audio data, not JSON
-    const audioBuffer = await response.arrayBuffer();
 
     // Set appropriate headers for audio response
     res.set({
@@ -111,6 +108,7 @@ app.post('/api/music/compose', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+*/
 
 // Complete IoT to Music generation flow with database storage
 app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
@@ -123,16 +121,8 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Timestamp and zone are required' });
     }
 
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    const elevenlabsApiKey = process.env.ELEVENLABS_API_KEY;
-
-    if (!openaiApiKey) {
-      return res.status(500).json({ error: 'OpenAI API key not configured' });
-    }
-
-    if (!elevenlabsApiKey) {
-      return res.status(500).json({ error: 'ElevenLabs API key not configured' });
-    }
+    // Ensure required services are configured
+    requireEnv('OPENAI_API_KEY');
 
     // Step 1: Generate music brief from sensor data
     console.log('Generating music brief from sensor data...');
@@ -144,25 +134,14 @@ app.post('/api/iot/generate-music', async (req: Request, res: Response) => {
 
     // Step 3: Generate audio using ElevenLabs
     console.log('Generating audio with ElevenLabs...');
-    const response = await fetch("https://api.elevenlabs.io/v1/music", {
-      method: "POST",
-      headers: {
-        "xi-api-key": elevenlabsApiKey,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt,
-        music_length_ms,
-        model_id
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).json({ error: `ElevenLabs API error: ${errorText}` });
+    let audioBuffer: ArrayBuffer;
+    try {
+      audioBuffer = await composeMusic({ prompt, music_length_ms, model_id });
+    } catch (e) {
+      const status = (e as any)?.status || 500;
+      const message = e instanceof Error ? e.message : 'Unknown error';
+      return res.status(status).json({ error: message });
     }
-
-    const audioBuffer = await response.arrayBuffer();
 
     // Step 4: Save audio file
     console.log('Saving audio file...');

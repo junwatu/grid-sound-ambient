@@ -205,7 +205,6 @@ These are the server routes use by the client side UI:
 | Method & Route              | Trigger in UI                          | Purpose                                      Consumes                                                   |
 |----------------------------|----------------------------------------|----------------------------------------------
 | `POST` `/api/iot/generate-music` | **Generate Music** button                 | Full pipeline: brief → prompt → music → save 
-| `POST` `/api/music/compose`      | **Create Music** (after prompt exists)    | Generate music from existing prompt          
 | `GET`  `/api/music/history`      | **View History** modal                    | Load saved generations                       
 | `GET`  `/audio/<filename>`       | Audio players in results/history        | Stream ambient music from server                 
 
@@ -213,7 +212,7 @@ The client data returned from the server is JSON. It contains all the data neede
 
 ![json data](images/client-data.png)
 
-One thing to note here is that OpenAI model is being used to generate music brief which is in JSON AND the music prompt.
+One thing to note here is that OpenAI model is being used to generate music brief AND the music prompt. What's the different? please, read the next section.
 
 ## Generate Music Prompt
 
@@ -280,7 +279,61 @@ Keep outputs steady and minimal; no reactivity to single-sample spikes—assume 
 `;
 ```
 
-This system prompt direct the behaviour of the model AI to create a music brief with pre-defined data structure using decision rules. If you want to enhance this project, this is the crucial part where you can adjust it to your requirement.
+This system prompt direct the behaviour of the model AI to create a music brief with pre-defined data structure using decision rules. If you want to enhance this project, this is the crucial part where you can adjust the decision rules to your requirement.
 
 ### Music Prompt
+
+The music prompt is generated using `generateMusicPrompt(musicBrief)` function. This function will call OpenAI model gpt-5-mini to generate music prompt based on the music brief input.
+
+
+```ts
+const response = await openai.responses.create({
+        model: "gpt-5-mini",
+        input: [
+            { role: "developer", content: [{ type: "input_text", text: systemPrompt }] },
+            { role: "user", content: [{ type: "input_text", text: JSON.stringify(brief, null, 2) }] },
+        ],
+        text: { format: { type: "text" }, verbosity: "medium" },
+        reasoning: { effort: "medium", summary: "auto" },
+        store: false,
+    } as any);
+```
+
+What's important here is the system prompt that set in the AI model.
+
+```js
+    const systemPrompt = `
+You convert an internal JSON "music brief" into a concise prompt for a generative music API.
+
+Rules:
+- Output 3–5 short lines, max ~450 characters total.
+- No meta commentary, no JSON, no emojis.
+- Include: mood, energy/tension, BPM range, duration, loopable flag, (optional) key, instruments, texture, goal.
+- Avoid sharp/bright transients when asked; keep language precise and production-safe.
+- Never invent values not present in the brief; default only when missing.
+
+Example:
+
+"Ambient track for a focused open office. Mood: focused, energy 62/100, tension 35/100.
+Tempo: 84–92 BPM, loopable, ~240s. Key: D minor.
+Instruments: warm pads, soft piano, light shaker, subtle bass.
+Texture: low-density, gentle movement, softened highs; avoid sharp transients and bright cymbals.
+Goal: steady momentum that supports concentration without masking speech."
+`;
+```
+
+Again, you can customize this system prompt to meet any of your custom project requirements before feed it to music generation. The full source code for music prompt generation is in the `libs\openai.ts` file.
+
+This is the example of the generated music prompt:
+
+```json
+"Calm. Energy 60/100, tension 25/100.\nTempo: 58–64 BPM, duration ~60s, loopable. Key: A minor.\nInstruments: warm pads, soft electric piano, subtle low bass, minimal brushed percussion.\nTexture: sparse, warm, low‑mid focused with airy pads and subdued transients; avoid sharp/bright transients to prevent masking ambient noise. Goal: gentle uplift and comfort without masking background."
+```
+
+## Generate Ambient Music
+
+After the music brief and music prompt generation, the next step is to generate the ambient music. This workflow handled by the `composeMusic()` function, you can see the full source code in the `libs\elevenlabs.ts` file.
+
+## Save Data
+
 
