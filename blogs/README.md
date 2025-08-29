@@ -493,3 +493,9 @@ const results = await client.select({
 });
 ```
 
+The `client.select()` function is basically wrapper for SQL SELECT, for the full source code for this function, you can look in the `libs\griddb.ts` file.
+
+
+## Further Enhancements
+
+This project is a simple prototype of what we can do using AI and GridDB database. In the real scenario you need to wire the app with real IoT sensor data.
