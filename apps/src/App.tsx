@@ -45,86 +45,9 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [showHistory, setShowHistory] = useState(false)
 
+  // @ts-ignore
   // Disable Generate button when a track already exists
   const hasGeneratedMusic = Boolean(completeResult || result)
-
-  /*
-  const handleGeneratePrompt = async () => {
-    if (!sensorInput.trim()) return
-
-    setIsGeneratingPrompt(true)
-    setError(null)
-    setMusicBrief(null)
-    setGeneratedPrompt(null)
-    setResult(null)
-
-    try {
-      const sensorSnapshot: SensorSnapshot = JSON.parse(sensorInput.trim())
-
-      const response = await fetch('/api/sensor/generate-prompt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(sensorSnapshot)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate prompt')
-      }
-
-      const data = await response.json()
-      setMusicBrief(data.musicBrief)
-      setGeneratedPrompt(data.prompt)
-      console.log('Prompt generated successfully:', data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
-      setError(errorMessage)
-      console.error('Error generating prompt:', err)
-    } finally {
-      setIsGeneratingPrompt(false)
-    }
-  }
-
-  const handleCreateMusic = async () => {
-    if (!generatedPrompt) return
-
-    setIsCreatingMusic(true)
-    setError(null)
-    setResult(null)
-
-    try {
-      const response = await fetch('/api/music/compose', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          prompt: generatedPrompt,
-          music_length_ms: 60000,
-          model_id: "music_v1"
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create music')
-      }
-
-      const audioBlob = await response.blob()
-      const audioUrl = URL.createObjectURL(audioBlob)
-      setResult({ audioUrl, size: audioBlob.size })
-      console.log('Music created successfully, size:', audioBlob.size)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
-      setError(errorMessage)
-      console.error('Error creating music:', err)
-    } finally {
-      setIsCreatingMusic(false)
-    }
-  }
-  */
 
   const handleCompleteFlow = async () => {
     if (!sensorInput.trim()) return
@@ -232,15 +155,6 @@ function App() {
               }}
             />
             <div className="flex justify-end space-x-3">
-              {/** Disabled: Generate Prompt Only (server route disabled)
-              <Button
-                onClick={handleGeneratePrompt}
-                disabled={!sensorInput.trim() || isGeneratingPrompt || isGeneratingComplete}
-                variant="outline"
-              >
-                {isGeneratingPrompt ? 'Generating Prompt...' : 'Generate Prompt Only'}
-              </Button>
-              */}
               <Button
                 onClick={handleCompleteFlow}
                 disabled={!sensorInput.trim() || isGeneratingComplete || isGeneratingPrompt || hasGeneratedMusic}
@@ -265,16 +179,6 @@ function App() {
                   </pre>
                 </details>
               )}
-              {/** Disabled: Create Music (server route disabled)
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleCreateMusic}
-                  disabled={isCreatingMusic}
-                >
-                  {isCreatingMusic ? 'Creating Music...' : 'Create Music'}
-                </Button>
-              </div>
-              */}
             </div>
           )}
 
