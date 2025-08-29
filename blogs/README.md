@@ -198,8 +198,6 @@ The workflow for the user is:
 3. The app displays the generated prompt, a brief (expandable), and an HTML5 audio player.
 4. Optionally, You can open “View History” to fetch recent records and replay saved tracks.
 
-![app flow UI](images/app-flow.png)
-
 These are the server routes use by the client side UI:
 
 | Method & Route              | Trigger in UI                          | Purpose                                      Consumes                                                   |
@@ -210,9 +208,27 @@ These are the server routes use by the client side UI:
 
 The client data returned from the server is JSON. It contains all the data needed for the UI, from music prompt, music brief to audio metadata such as audio path and filename.
 
+
 ![json data](images/client-data.png)
 
 One thing to note here is that OpenAI model is being used to generate music brief AND the music prompt. What's the different? please, read the next section.
+
+
+### Result UI
+
+Other than user input for IoT data snapshot, after succesfully generated ambient music the result user interface will render:
+
+1. Generated music prompt (+ Music bried details)
+2. Music player, it's information, and the download link.
+
+
+![app flow UI](images/app-flow.png)
+
+### History UI
+
+When the user clicks the **View History** button, the app changes state to display all generated music, associated metadata, simplified IoT data, music briefs, and prompts.
+
+![history view](images/music-history.png)
 
 ## Generate Music Prompt
 
@@ -332,7 +348,40 @@ This is the example of the generated music prompt:
 
 ## Generate Ambient Music
 
-After the music brief and music prompt generation, the next step is to generate the ambient music. This workflow handled by the `composeMusic()` function, you can see the full source code in the `libs\elevenlabs.ts` file.
+After the music brief and music prompt generation, the next step is to generate the ambient music. This workflow handled by the `composeMusic()` function:
+
+```ts
+export async function composeMusic({
+  prompt,
+  music_length_ms = 60000,
+  model_id = "music_v1",
+  apiKey = process.env.ELEVENLABS_API_KEY,
+}: ComposeParams): Promise<ArrayBuffer> {
+  if (!apiKey) {
+    throw new Error('ElevenLabs API key not configured');
+  }
+
+  const response = await fetch("https://api.elevenlabs.io/v1/music", {
+    method: "POST",
+    headers: {
+      "xi-api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt, music_length_ms, model_id }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    const err: any = new Error(`ElevenLabs API error: ${errorText}`);
+    err.status = response.status;
+    throw err;
+  }
+
+  return await response.arrayBuffer();
+}
+```
+
+Basically, the code will call ElevenLabs Music API that using the latest `music_v1` model. However, in this project, the duration of the generated music is hardcoded to 60 second or 1 minute. 
 
 ## Save Data
 
